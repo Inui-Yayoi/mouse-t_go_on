@@ -1,0 +1,7 @@
+{file_name = stage_{name}.txt | stage_{name}_MA.txt}
+width height(Ext start and goal)
+goal(multiple allowed)
+start(multiple allowed)
+tiles of stage...
+...
+amount of tiles(tile0-9, set -1 mean inf)

@@ -6,7 +6,7 @@ date: 2025-09-06
 shortcut "main" is entry
 
 
-#load stage
+# load stage
   ">" mean request input
   input stage name (first, practice stage name "1" and nexts)
 
@@ -49,7 +49,7 @@ shortcut "main" is entry
 (if lost this image, タイル案等.png help you)
 (or set your font monospaced)
 
-#tile setting
+# tile setting
   at first, top-left color reverse area is you
   WASD: move
   0-9: set tile
@@ -69,7 +69,7 @@ shortcut "main" is entry
   -1 mean inf
 
 
-#running rats
+# running rats
   "^" mean rats
   go ahead only head
   go out of stage is disable exclusive goal
@@ -82,7 +82,7 @@ shortcut "main" is entry
   running quit when all rats goaled or miss or input space (space mean stop running)
 
 
-#after running
+# after running
   if miss, wait enter and go back to setting tiles
   for exit, rerun and stop
   else ">" print

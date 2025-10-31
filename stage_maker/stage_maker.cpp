@@ -63,7 +63,7 @@ int main(){
             std::cin.seekg(std::ios_base::end);
             if(std::cin.get() == 'e'){
                 std::cin.seekg(std::ios_base::end);
-                break;
+                exit(EXIT_SUCCESS);
             }
             else{
                 std::cin.seekg(std::ios_base::end);

@@ -488,7 +488,7 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
                     case Direction::RIGHT: dx =  1; dy =  0; break;
                 }
                 for(auto opponent = rats.rbegin(); *opponent != r; ++opponent){
-                    if(r.x+dx == opponent->x && r.y+dy == opponent->y && opponent->direction == (r.direction + 2) % 4){
+                    if(r.x+dx == opponent->x && r.y+dy == opponent->y && r.direction == (opponent->direction + 2) % 4){
                         std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 4)) << "!";
                         std::cout << std::format("\033[{};{}H", (2*opponent->y + 1), (4*opponent->x + 4)) << "!";
                         return 1; // Bump
@@ -544,6 +544,9 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
             {//bump
                 for(auto opponent = rats.begin(); *opponent != r; ++opponent){
                     if(r.x == opponent->x && r.y == opponent->y){
+                        if(stage[r.y][r.x] == 29 && r.direction != (opponent->direction)%2){//in cross, not on same line
+                            continue;
+                        }
                         std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 2)) << Color::RAT << "***" "\033[39m";
                         return 1; // Bump
                     }

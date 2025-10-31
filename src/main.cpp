@@ -6,6 +6,7 @@
 #include "lib.hpp"
 
 int main(void){
+    std::cout << "\033]0;mouse't go on\a";
     std::cout << "\033(B\033)0";//!
     std::atexit([]{std::cout << "\033[!p";});
     std::vector<std::vector<MAP_SIZE_t>> stage;

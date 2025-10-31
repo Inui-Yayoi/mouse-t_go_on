@@ -9,6 +9,7 @@
 #include "lib_stage_maker.hpp"
 
 int main(){
+    std::cout << "\033]0;stage maker\a";
     std::cout << "\033(B\033)0";//!
     std::atexit([]{std::cout << "\033[!p";});
     std::vector<std::vector<MAP_SIZE_t>> stage{{32}, {0}, {32}};

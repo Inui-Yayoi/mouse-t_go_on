@@ -200,14 +200,25 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
         std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 3));
         std::cout << Color::RAT << "^" << "\033[39m";
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    if(kbhit_wrapper()){
-        if(getch_wrapper() == ' '){
-            return -1;//stop
-        }
-    }
 
+    char input;
+    bool is_speed_up{false};
     while(1){
+        if(kbhit_wrapper()){
+            switch(getch_wrapper()){
+                case ' ':
+                    return -1;//stop
+                    break;
+
+                case 'd':
+                    is_speed_up = !is_speed_up;
+                    break;
+            }
+        }
+
+        if(is_speed_up){std::this_thread::sleep_for(std::chrono::milliseconds(250));}
+        else{std::this_thread::sleep_for(std::chrono::milliseconds(500));}
+
         for(auto& r : rats){//toooo long...
             if(r.goaled){
                 (r.direction += 1) %= 4;
@@ -484,18 +495,6 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
             }
             
             if(print_rat(r)){return 1;}
-        }
-        
-        if(kbhit_wrapper()){
-            if(getch_wrapper() == ' '){
-                return -1;//stop
-            }
-            else{
-                std::this_thread::sleep_for(std::chrono::milliseconds(250));
-            }
-        }
-        else{
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 }

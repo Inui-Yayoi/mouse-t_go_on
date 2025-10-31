@@ -16,6 +16,7 @@ int main(void){
     while(1){
         std::cout << ">";
         std::cin >> stage_name;
+        if(stage_name == "e"){exit(EXIT_SUCCESS);}
         if(load(stage, tiles, stage_name)){
             std::cerr << "Error: Failed to load stage data." << std::endl;
             WAITTING_FOR_ENTER;
@@ -35,16 +36,7 @@ int main(void){
             std::cout << "\033[?25h"; // Show cursor
             if(ret == 0){//clear
                 std::cout << "!!!!" << std::endl;
-                std::cout << ">";
-                std::cin.seekg(std::ios_base::end);
-                if(std::cin.get() == 'e'){
-                    std::cin.seekg(std::ios_base::end);
-                    exit(EXIT_SUCCESS);
-                }
-                else{
-                    std::cin.seekg(std::ios_base::end);
-                    break;
-                }
+                break;
             }
             else if(ret == 1){//miss
                 std::cout << "!?!?";

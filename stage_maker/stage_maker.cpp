@@ -6,6 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <format>
+#include <ranges>
 #include "lib_stage_maker.hpp"
 
 int main(){
@@ -41,13 +42,10 @@ int main(){
         if(ret == 0){//clear
             std::cout << "!!!!" << std::endl;
             std::cout << ">";
-            std::cin.seekg(std::ios_base::end);
-            if(std::cin.get() == 'e'){// end
-                std::cin.seekg(std::ios_base::end);
+            if(getch_wrapper() == 'e'){// end
                 break;
             }
             else{
-                std::cin.seekg(std::ios_base::end);
                 std::cout << "\033[?25l"; // Hide cursor
                 continue;
             }
@@ -61,13 +59,10 @@ int main(){
         else if(ret == -1){//stop
             std::cout << "????" << std::endl;
             std::cout << ">";
-            std::cin.seekg(std::ios_base::end);
-            if(std::cin.get() == 'e'){
-                std::cin.seekg(std::ios_base::end);
+            if(getch_wrapper() == 'e'){
                 exit(EXIT_SUCCESS);
             }
             else{
-                std::cin.seekg(std::ios_base::end);
                 std::cout << "\033[?25l"; // Hide cursor
                 continue;
             }
@@ -361,7 +356,6 @@ int set_tiles(std::vector<std::vector<MAP_SIZE_t>> &stage, std::vector<TILE_NUM_
                     std::cout << "\0337";
                     std::cout << "\033[2J\033[H"; // Clear screen and move cursor to home position
                     print_stage(stage);
-                    print_tiles(tiles);
 
                     std::cout << "\0338";
                     std::cout << "\033[3D\033[7m" << tile(stage[cursor.y][cursor.x]) << "\033[0m";
@@ -386,7 +380,6 @@ int set_tiles(std::vector<std::vector<MAP_SIZE_t>> &stage, std::vector<TILE_NUM_
                     std::cout << "\0337";
                     std::cout << "\033[2J\033[H"; // Clear screen and move cursor to home position
                     print_stage(stage);
-                    print_tiles(tiles);
 
                     std::cout << "\0338";
                     if(cursor.x >= WIDTH){
@@ -452,16 +445,17 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
     const MAP_SIZE_t HEIGHT = stage.size() - 2;
 
     std::vector<Rat> rats;
-    for(int i = 0; i < WIDTH; ++i){
-        if(stage[HEIGHT+1][i] == 31){
+    for(auto [i, tile]: std::ranges::enumerate_view(stage.back())){
+        if(tile == 31){
             rats.emplace_back(i, HEIGHT+1);//set start position
         }
     }
 
     std::cout << "\033[2J\033[H"; // Clear screen and move cursor to home position
     print_stage(stage);
+    std::cout << std::format("\033[{}d", 2*HEIGHT + 3);
     for(const auto& r : rats){//print rats at start
-        std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 3));
+        std::cout << std::format("\033[{}G", (4*r.x + 3));
         std::cout << Color::RAT << "^" << "\033[39m";
     }
 
@@ -506,49 +500,12 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
                 }
             }
 
-            fix_tile_at_rat(rats, r, stage);
+            fix_tile_at_rat(r, stage);
 
-            {//move
-                if(r.direction == Direction::UP){
-                    if(r.y > 0){
-                        r.y--;
-                    }
-                    else{
-                        print_rat(r);
-                        std::cerr << "?Were are you now?" << std::endl;
-                        return 2; // illigal position
-                    }
-                }
-                else if(r.direction == Direction::DOWN){
-                    if(r.y < HEIGHT){
-                        r.y++;
-                    }
-                    else{
-                        print_rat(r);
-                        std::cout << "!" << std::endl;
-                        return 1; // Out of bounds
-                    }
-                }
-                else if(r.direction == Direction::LEFT){
-                    if(r.x > 0){
-                        r.x--;
-                    }
-                    else{
-                        print_rat(r);
-                        std::cout << "!" << std::endl;
-                        return 1; // Out of bounds
-                    }
-                }
-                else if(r.direction == Direction::RIGHT){
-                    if(r.x < WIDTH - 1){
-                        r.x++;
-                    }
-                    else{
-                        print_rat(r);
-                        std::cout << "!" << std::endl;
-                        return 1; // Out of bounds
-                    }
-                }
+            if(r.move(WIDTH, HEIGHT)){
+                print_rat(r);
+                std::cout << "!" << std::endl;
+                return 1;// Out of bounds
             }
 
             {//bump
@@ -608,18 +565,7 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
                         stage[r.y][r.x] *= -1;
                     }
                     else if(stage[r.y][r.x]%10 == 9){
-                        if(r.direction == Direction::UP){
-                            r.direction = Direction::DOWN;
-                        }
-                        else if(r.direction == Direction::DOWN){
-                            r.direction = Direction::UP;
-                        }
-                        else if(r.direction == Direction::LEFT){
-                            r.direction = Direction::RIGHT;
-                        }
-                        else if(r.direction == Direction::RIGHT){
-                            r.direction = Direction::LEFT;
-                        }
+                        r.direction = (r.direction + 2)%4;//turn
                     }
                     else if(stage[r.y][r.x] == 10){
                         for(auto _ = 0; _ < 4; ++_){
@@ -635,15 +581,8 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
                     }
                 }
                 else if(stage[r.y][r.x] == 30){
-                    for(auto opponent = rats.begin(); opponent != rats.end(); ++opponent){
-                        if(!opponent->goaled){continue;}//and skip myself
-                        if(r.x == opponent->x && r.y == opponent->y){
-                            std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 2)) << Color::RAT << "***" "\033[39m";
-                            return 1; // Bump
-                        }
-                    }
                     r.goaled = true; // Reached the goal
-                    if(std::all_of(rats.begin(), rats.end(), [](const Rat &rat){return rat.goaled;})){
+                    if(std::ranges::all_of(rats, [](const Rat &rat){return rat.goaled;})){
                         print_rat(r);
                         return 0;//clear
                     }
@@ -654,55 +593,55 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
                     return 1; // not a goal
                 }
                 else if(stage[r.y][r.x] == 21){
-                    if(r.direction == Direction::UP || r.direction == Direction::LEFT){
-                        print_rat(r);
-                        std::cout << "!" << std::endl;
-                        return 1; // hit a wall
-                    }
-                    else if(r.direction == Direction::DOWN){
+                    if(r.direction == Direction::DOWN){
                         r.direction = Direction::LEFT;
                     }
                     else if(r.direction == Direction::RIGHT){
                         r.direction = Direction::UP;
+                    }
+                    else{
+                        print_rat(r);
+                        std::cout << "!" << std::endl;
+                        return 1; // hit a wall
                     }
                 }
                 else if(stage[r.y][r.x] == 22){
-                    if(r.direction == Direction::DOWN || r.direction == Direction::LEFT){
-                        print_rat(r);
-                        std::cout << "!" << std::endl;
-                        return 1; // hit a wall
-                    }
-                    else if(r.direction == Direction::UP){
+                    if(r.direction == Direction::UP){
                         r.direction = Direction::LEFT;
                     }
                     else if(r.direction == Direction::RIGHT){
                         r.direction = Direction::DOWN;
                     }
-                }
-                else if(stage[r.y][r.x] == 23){
-                    if(r.direction == Direction::DOWN || r.direction == Direction::RIGHT){
+                    else{
                         print_rat(r);
                         std::cout << "!" << std::endl;
                         return 1; // hit a wall
                     }
-                    else if(r.direction == Direction::UP){
+                }
+                else if(stage[r.y][r.x] == 23){
+                    if(r.direction == Direction::UP){
                         r.direction = Direction::RIGHT;
                     }
                     else if(r.direction == Direction::LEFT){
                         r.direction = Direction::DOWN;
                     }
-                }
-                else if(stage[r.y][r.x] == 24){
-                    if(r.direction == Direction::UP || r.direction == Direction::RIGHT){
+                    else{
                         print_rat(r);
                         std::cout << "!" << std::endl;
                         return 1; // hit a wall
                     }
-                    else if(r.direction == Direction::DOWN){
+                }
+                else if(stage[r.y][r.x] == 24){
+                    if(r.direction == Direction::DOWN){
                         r.direction = Direction::RIGHT;
                     }
                     else if(r.direction == Direction::LEFT){
                         r.direction = Direction::UP;
+                    }
+                    else{
+                        print_rat(r);
+                        std::cout << "!" << std::endl;
+                        return 1; // hit a wall
                     }
                 }
                 else if(stage[r.y][r.x] == 25){
@@ -757,7 +696,7 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
                 }
             }
             
-            if(print_rat(r)){return 1;}
+            print_rat(r);
         }
     }
 }
@@ -779,20 +718,20 @@ int save_stage(std::vector<std::vector<MAP_SIZE_t>> &stage, std::vector<TILE_NUM
     ofs << std::format("{:02} {:02}", WIDTH, HEIGHT) << "\n";
 
     //goal num write
-    for(auto it = stage[0].begin(); it != stage[0].end(); ++it){
-        if(*it == 30){
-            ofsMA << std::format("{:02} ", it - stage[0].begin());
-            ofs << std::format("{:02} ", it - stage[0].begin());
+    for(auto [i, tile]: std::ranges::enumerate_view(stage.front())){
+        if(tile == 30){
+            ofsMA << std::format("{:02} ", i);
+            ofs << std::format("{:02} ", i);
         }
     }
     ofsMA << "\n";
     ofs << "\n";
 
     //start num write
-    for(auto it = stage[HEIGHT + 1].begin(); it != stage[HEIGHT + 1].end(); ++it){
-        if(*it == 31){
-            ofsMA << std::format("{:02} ", it - stage[HEIGHT + 1].begin());
-            ofs << std::format("{:02} ", it - stage[HEIGHT + 1].begin());
+    for(auto [i, tile]: std::ranges::enumerate_view(stage.back())){
+        if(tile == 31){
+            ofsMA << std::format("{:02} ", i);
+            ofs << std::format("{:02} ", i);
         }
     }
     ofsMA << "\n\n";
@@ -800,8 +739,8 @@ int save_stage(std::vector<std::vector<MAP_SIZE_t>> &stage, std::vector<TILE_NUM
 
 
     //stage write
-    for(auto line = stage.begin() + 1; line != stage.end() - 1; ++line){
-        for(auto &tile : *line){
+    for(auto line: stage | std::views::drop(1) | std::views::take(HEIGHT)){
+        for(auto &tile : line){
             ofsMA << std::format("{:02} ", tile);
             if(0 <= tile && tile < 10){ofs << "00 ";}
             else{ofs << std::format("{:02} ", tile);}
@@ -844,11 +783,11 @@ int print_stage(const std::vector<std::vector<MAP_SIZE_t>> &stage){
 
 int print_tiles(const std::vector<TILE_NUM_t> &tiles){
     std::cout << "  0   1   2   3   4   5   6   7   8   9  \n";
-    std::cout << Color::USER_SET.data() << '|';
+    std::cout << '|';
     for(auto i = 0; i < 10; ++i){
-        std::cout << tiles_i2s[i] << '|';
+        std::cout << Color::USER_SET << tiles_i2s[i] << "\033[39m" << '|';
     }
-    std::cout << "\033[39m" << "\n";
+    std::cout << '\n';
 
     std::cout << '|';
     for(auto i = 0; i < 10; ++i){
@@ -877,24 +816,49 @@ int print_rat(const Rat &r){
         case Direction::RIGHT:
             std::cout << ">";
             break;
-        
-        default:
-            std::cout << "!";
-            std::cerr << "!invalid direction!" << std::endl;
-            return 1; // Invalid direction
     }
     std::cout << "\033[39m"; // Reset color
     return 0;
 }
 
-int fix_tile_at_rat(const std::vector<Rat> &rats, const Rat &r, const std::vector<std::vector<MAP_SIZE_t>> &stage){
-    for(const auto& other_rat : rats){
-        if(other_rat == r){continue;}//skip myself
-        if(other_rat.x == r.x && other_rat.y == r.y){
-            return 0;
-        }
-    }
+int fix_tile_at_rat(const Rat &r, const std::vector<std::vector<MAP_SIZE_t>> &stage){
     std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 2));
     std::cout << tile(stage[r.y][r.x]);
+    return 0;
+}
+
+int Rat::move(const MAP_SIZE_t WIDTH, const MAP_SIZE_t HEIGHT){
+    switch(this->direction){
+        case Direction::UP:
+            this->y--;
+            break;
+
+        case Direction::DOWN:
+            if(this->y < HEIGHT){
+                this->y++;
+            }
+            else{
+                return 1; // Out of bounds
+            }
+            break;
+        
+        case Direction::LEFT:
+            if(this->x > 0){
+                this->x--;
+            }
+            else{
+                return 1; // Out of bounds
+            }
+            break;
+
+        case Direction::RIGHT:
+            if(this->x < WIDTH - 1){
+                this->x++;
+            }
+            else{
+                return 1; // Out of bounds
+            }
+            break;
+    }
     return 0;
 }

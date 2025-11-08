@@ -178,7 +178,7 @@ int set_tiles(std::vector<std::vector<MAP_SIZE_t>> &stage, std::vector<TILE_NUM_
             case ' ':
                 return 0;
             
-            case 0x03:
+            case 0x03:// Ctrl+c
                 exit(EXIT_FAILURE);
         }
     }
@@ -197,12 +197,12 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage){
 
     std::cout << "\033[H\033[0J"; //move cursor to home position and Clear screen
     print_stage(stage);
+    std::cout << std::format("\033[{}d", 2*HEIGHT + 3);
     for(const auto& r : rats){//print rats at start
-        std::cout << std::format("\033[{};{}H", (2*r.y + 1), (4*r.x + 3));
+        std::cout << std::format("\033[{}G", (4*r.x + 3));
         std::cout << Color::RAT << "^" << "\033[39m";
     }
 
-    char input;
     bool is_speed_up{false};
     while(1){
         if(kbhit_wrapper()){

@@ -469,6 +469,7 @@ int print_tiles(const std::vector<TILE_NUM_t> &tiles){
     for(auto i = 0; i < 10; ++i){
         std::cout << Color::USER_SET << tiles_i2s[i] << "\033[39m" << '|';
     }
+    std::cout << '\n';
 
     std::cout << '|';
     for(auto i = 0; i < 10; ++i){

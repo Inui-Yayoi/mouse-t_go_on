@@ -61,7 +61,7 @@ shortcut "main" is entry
 
   00: none, 01: face up, 02: face left, 03: face down, 04: face right, 05:up-down flip, 06: left-right flip, 07: up-right flip, 08: left-down flip, 09: turn back,
   10: hole (can't cross), 11-19: same 01-09 but can't change,
-  20: glass (one time only), 21: left-up cross, 22: left-down cross, 23: down-right cross, 24: right-up cross, 25: up-down cross, 26: left-right cross, 27: up-right left-down cross, 28: up-left down-right cross, 29: up-down left-right cross
+  20: glass (one time only), 21: left-up cross, 22: left-down cross, 23: down-right cross, 24: right-up cross, 25: up-down cross, 26: left-right cross, 27: up-right left-down cross, 28: up-left down-right cross, 29: over cross
   (negative x5-x8 mean reverse but NOT arrowed)
   00-09 is change-able tiles
 
@@ -74,7 +74,7 @@ shortcut "main" is entry
   go ahead only head
   go out of stage is disable exclusive goal
   So, go no goal position is disable!
-  In addition, dump or same cell between rats is disable!!
+  In addition, dump or same cell between rats is disable!! (Specially, 29 is able 'ONLY' crossing)
 
   in x5-x8, left mark is now direction
   in 21-26, enter not connect is disable
@@ -87,12 +87,12 @@ shortcut "main" is entry
   for exit, rerun and stop
   else ">" print
 
->{e|other}
+>{e|stage name|other}
 
   "e" mean exit, finish exe
   else other, 
-  if clear, go back to load stage
-  else if stop, go back to setting tiles
+  if stop, go back to setting tiles
+  else if clear, input stage name to load stage
 
 
 

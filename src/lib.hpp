@@ -11,11 +11,11 @@ using MAP_SIZE_t = std::int16_t;
 using TILE_NUM_t = std::int32_t;//size of MAP_SIZE_t * MAP_SIZE_t
 
 namespace Color{
-    constexpr std::string_view
-    INVALID = "\033[31m",//red
-    USER_SET = "\033[37m",//white
-    NO_CHANGE = "\033[90m",//gray
-    RAT = "\033[32m";//green
+    constexpr char
+    INVALID[] = "\033[31m",//red
+    USER_SET[] = "\033[37m",//white
+    NO_CHANGE[] = "\033[90m",//gray
+    RAT[] = "\033[32m";//green
 }
 
 namespace Direction{
@@ -31,13 +31,16 @@ class Rat{
         bool goaled = false;
         MAP_SIZE_t x, y;
         std::int8_t direction = Direction::UP;
-        Rat(MAP_SIZE_t x, MAP_SIZE_t y) : x(x), y(y) {}
 
-        bool operator==(const Rat &other) const {
-            return this == &other;
+        Rat() = delete;
+        Rat(MAP_SIZE_t x, MAP_SIZE_t y) : x(x), y(y) {}
+        int move(const MAP_SIZE_t WIDTH, const MAP_SIZE_t HEIGHT);
+
+        friend bool operator==(const Rat &rat1, const Rat &rat2){
+            return &rat1 == &rat2;
         }
-        bool operator!=(const Rat &other) const {
-            return this != &other;
+        friend bool operator!=(const Rat &rat1, const Rat &rat2){
+            return !(rat1 == rat2);
         }
 };
 
@@ -88,16 +91,16 @@ inline std::unordered_map<std::int8_t, std::string> tiles_i2s{
 
 inline std::string tile_for_set(const short &num){
     if(num == -1){
-        return Color::INVALID.data() + tiles_i2s[-1] + "\033[39m";
+        return Color::INVALID + tiles_i2s[-1] + "\033[39m";
     }
     else if(num == 0){
         //nop
     }
     else if(0 < num && num < 10){
-        return Color::USER_SET.data() + tiles_i2s[num] + "\033[39m";
+        return Color::USER_SET + tiles_i2s[num] + "\033[39m";
     }
     else if(10 <= num && num < 30){
-        return Color::NO_CHANGE.data() + tiles_i2s[num] + "\033[39m";
+        return Color::NO_CHANGE + tiles_i2s[num] + "\033[39m";
     }
     else if(30 <= num && num <= 32){
         //nop
@@ -110,20 +113,20 @@ inline std::string tile_for_set(const short &num){
 
 inline std::string tile(const short &num){
     if(num == -1){
-        return Color::INVALID.data() + tiles_i2s[-1] + "\033[39m";
+        return Color::INVALID + tiles_i2s[-1] + "\033[39m";
     }
     else if(num == 0){
         //nop
     }
     else if(0 < std::abs(num) && std::abs(num) < 10){
-        return Color::USER_SET.data() + tiles_i2s[num] + "\033[39m";
+        return Color::USER_SET + tiles_i2s[num] + "\033[39m";
     }
     else if(10 <= std::abs(num) && std::abs(num) <= 20){
-        return Color::NO_CHANGE.data() + tiles_i2s[num] + "\033[39m";
+        return Color::NO_CHANGE + tiles_i2s[num] + "\033[39m";
     }
     else if(20 < num && num < 30){
         using namespace std::string_literals;
-        return "\x0e"s + Color::NO_CHANGE.data() + tiles_i2s[num] + "\033[39m" + "\x0f";
+        return "\x0e"s + Color::NO_CHANGE + tiles_i2s[num] + "\033[39m" + "\x0f";
     }
     else if(30 <= num && num < 32){
         return "\x0e" + tiles_i2s[num] + "\x0f";
@@ -145,4 +148,4 @@ int run_stage(std::vector<std::vector<MAP_SIZE_t>> stage);
 int print_stage(const std::vector<std::vector<MAP_SIZE_t>> &stage);
 int print_tiles(const std::vector<TILE_NUM_t> &tiles);
 int print_rat(const Rat &r);
-int fix_tile_at_rat(const std::vector<Rat> &rats, const Rat &r, const std::vector<std::vector<MAP_SIZE_t>> &stage);
+int fix_tile_at_rat(const Rat &r, const std::vector<std::vector<MAP_SIZE_t>> &stage);

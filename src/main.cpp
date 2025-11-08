@@ -7,7 +7,7 @@
 
 int main(void){
     std::cout << "\033]0;mouse't go on\a";
-    std::cout << "\033(B\033)0";//!
+    std::cout << "\033(B\033)0";
     std::atexit([]{std::cout << "\033[!p";});
     std::vector<std::vector<MAP_SIZE_t>> stage;
     std::vector<TILE_NUM_t> tiles(10);
@@ -23,9 +23,10 @@ int main(void){
             exit(EXIT_FAILURE);
         }
 
-        std::cout << "\033[?25l"; // Hide cursor
         while(1){
+            std::cout << "\033[?25l"; // Hide cursor
             if(set_tiles(stage, tiles)){
+                std::cout << "\033[?25h"; // Show cursor
                 std::cerr << "Error: Failed to set tiles." << std::endl;
                 WAITTING_FOR_ENTER;
                 exit(EXIT_FAILURE);
@@ -40,23 +41,14 @@ int main(void){
             }
             else if(ret == 1){//miss
                 std::cout << "!?!?";
-                WAITTING_FOR_ENTER;
-                std::cout << "\033[?25l"; // Hide cursor
+                WAITTING_FOR_ENTER;//waitting for user check stage
                 continue;
             }
             else if(ret == -1){//stop
                 std::cout << "????" << std::endl;
                 std::cout << ">";
-                std::cin.seekg(std::ios_base::end);
-                if(std::cin.get() == 'e'){
-                    std::cin.seekg(std::ios_base::end);
-                    exit(EXIT_SUCCESS);
-                }
-                else{
-                    std::cin.seekg(std::ios_base::end);
-                    std::cout << "\033[?25l"; // Hide cursor
-                    continue;
-                }
+                if(getch_wrapper() == 'e'){exit(EXIT_SUCCESS);}
+                else{continue;}
             }
             else if(ret == 2){
                 std::cerr << "Error: Rats in illegal positions." << std::endl;
